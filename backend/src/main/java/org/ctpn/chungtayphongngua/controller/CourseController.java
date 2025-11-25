@@ -1,6 +1,7 @@
 package org.ctpn.chungtayphongngua.controller;
 
 import org.ctpn.chungtayphongngua.entity.Course;
+import org.ctpn.chungtayphongngua.entity.Enrollment;
 import org.ctpn.chungtayphongngua.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -10,19 +11,17 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/courses") // Corrected: Removed /api prefix
+@RequestMapping("/courses")
 @CrossOrigin(origins = "*")
 public class CourseController {
 
     @Autowired
     private CourseService courseService;
 
-    /**
-     * Get all public courses with pagination
-     */
     @GetMapping
     public ResponseEntity<Page<Course>> getAllCourses(
             @RequestParam(defaultValue = "0") int page,
@@ -32,9 +31,6 @@ public class CourseController {
         return ResponseEntity.ok(courses);
     }
 
-    /**
-     * Get a single course by its ID
-     */
     @GetMapping("/{id}")
     public ResponseEntity<Course> getCourseById(@PathVariable Long id) {
         Optional<Course> course = courseService.getCourseById(id);
@@ -42,26 +38,27 @@ public class CourseController {
                      .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Get courses for the currently logged-in user
-     */
     @GetMapping("/my-courses")
     public ResponseEntity<List<Course>> getMyCourses(Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(401).build();
-        }
         String username = authentication.getName();
-        try {
-            List<Course> courses = courseService.findCoursesByUsername(username);
-            return ResponseEntity.ok(courses);
-        } catch (UsernameNotFoundException e) {
-            return ResponseEntity.status(404).build();
-        }
+        List<Course> courses = courseService.findCoursesByUsername(username);
+        return ResponseEntity.ok(courses);
     }
 
-    /**
-     * Search courses by title
-     */
+    @GetMapping("/my-stats")
+    public ResponseEntity<Map<String, Object>> getMyCourseStats(Authentication authentication) {
+        String username = authentication.getName();
+        Map<String, Object> stats = courseService.getUserCourseStats(username);
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/my-enrollments/active")
+    public ResponseEntity<List<Enrollment>> getMyActiveEnrollments(Authentication authentication) {
+        String username = authentication.getName();
+        List<Enrollment> enrollments = courseService.getActiveEnrollmentsForUser(username);
+        return ResponseEntity.ok(enrollments);
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<Course>> searchCourses(@RequestParam String title) {
         List<Course> courses = courseService.searchCoursesByTitle(title);

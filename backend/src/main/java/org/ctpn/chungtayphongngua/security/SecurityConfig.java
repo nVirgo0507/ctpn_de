@@ -19,7 +19,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -68,9 +67,11 @@ public class SecurityConfig {
                 .requestMatchers("/public/**").permitAll()
                 .requestMatchers("/homepage/**").permitAll()
                 .requestMatchers("/blog/public/**").permitAll()
-                .requestMatchers("/courses").permitAll() // Public course list
-                .requestMatchers("/courses/{id}").permitAll() // Public course detail
                 
+                // Specific public GET requests for courses
+                .requestMatchers(HttpMethod.GET, "/courses").permitAll()
+                .requestMatchers(HttpMethod.GET, "/courses/{id:\\d+}").permitAll()
+
                 // Admin-only endpoints
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 
