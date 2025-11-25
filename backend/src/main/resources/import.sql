@@ -1,0 +1,3 @@
+-- This file is intentionally left blank.
+-- Data seeding is now handled by the DataSeeder.java class.
+-- This change prevents Hibernate's automatic, error-prone execution of this file.

@@ -1,0 +1,3 @@
+npx playwright test playwright-tests/public-access.spec.js --trace=on
+
+npx playwright show-trace path/to/trace.zip
