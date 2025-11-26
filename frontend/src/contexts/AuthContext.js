@@ -16,32 +16,32 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check for existing session on mount
-    const token = localStorage.getItem('jwt_token');
-    const userData = localStorage.getItem('user_data');
-    
+    const token = sessionStorage.getItem('jwt_token');
+    const userData = sessionStorage.getItem('user_data');
+
     if (token && userData) {
       try {
         setUser(JSON.parse(userData));
       } catch (error) {
         console.error('Error parsing user data:', error);
-        localStorage.removeItem('jwt_token');
-        localStorage.removeItem('user_data');
+        sessionStorage.removeItem('jwt_token');
+        sessionStorage.removeItem('user_data');
       }
     }
-    
+
     setLoading(false);
   }, []);
 
   const login = (userData, token) => {
     setUser(userData);
-    localStorage.setItem('jwt_token', token);
-    localStorage.setItem('user_data', JSON.stringify(userData));
+    sessionStorage.setItem('jwt_token', token);
+    sessionStorage.setItem('user_data', JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('jwt_token');
-    localStorage.removeItem('user_data');
+    sessionStorage.removeItem('jwt_token');
+    sessionStorage.removeItem('user_data');
   };
 
   const value = {
