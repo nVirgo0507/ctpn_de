@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> {
+    void deleteByUser(org.ctpn.chungtayphongngua.entity.User user);
 }

@@ -17,10 +17,13 @@ public class UserRole {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
-    @JsonBackReference
     private Role role;
 
-    public UserRole() {}
+    @Column(name = "assigned_at")
+    private java.time.LocalDateTime assignedAt;
+
+    public UserRole() {
+    }
 
     public UserRole(User user, Role role) {
         this.user = user;
@@ -28,8 +31,27 @@ public class UserRole {
     }
 
     // Getters and Setters...
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public java.time.LocalDateTime getAssignedAt() {
+        return assignedAt;
+    }
+
+    public void setAssignedAt(java.time.LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
+    }
 }
