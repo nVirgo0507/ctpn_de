@@ -19,6 +19,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.verificationToken = :token AND u.verificationTokenExpiresAt > :now")
     Optional<User> findByValidVerificationToken(@Param("token") String token, @Param("now") LocalDateTime now);
 
-    @Query("SELECT u FROM User u JOIN u.userRoles ur JOIN ur.role r WHERE r.roleName = 'CONSULTANT'")
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.userProfile up LEFT JOIN FETCH up.specializations JOIN u.userRoles ur JOIN ur.role r WHERE r.roleName = 'CONSULTANT'")
     List<User> findConsultantsWithProfile();
 }

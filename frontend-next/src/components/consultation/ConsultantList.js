@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { FiCalendar, FiClock, FiMessageCircle, FiStar } from 'react-icons/fi';
 import { authFetch } from '../../utils/authFetch';
+import BookingModal from './BookingModal';
 
 /**
  * Consultant List Component
@@ -170,7 +171,7 @@ const ConsultantList = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
                     {consultants.map((consultant) => (
                         <div
-                            key={consultant.userId}
+                            key={consultant.id}
                             className="bg-white/70 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-[1.02]"
                         >
                             {/* Profile Image */}
@@ -246,9 +247,7 @@ const ConsultantList = () => {
                                         Đặt lịch tư vấn
                                     </button>
                                     <button
-                                        onClick={() => {
-                                            alert('Chức năng xem hồ sơ đang được phát triển');
-                                        }}
+                                        onClick={() => window.location.href = `/consultants/${consultant.id}`}
                                         className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors font-medium"
                                     >
                                         Xem hồ sơ
@@ -275,34 +274,16 @@ const ConsultantList = () => {
                     </div>
                 )}
 
-                {/* Booking Modal Placeholder */}
+                {/* Booking Modal */}
                 {showBooking && selectedConsultant && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-                            <h3 className="text-xl font-bold text-gray-800 mb-4">
-                                Đặt lịch tư vấn với {selectedConsultant.fullName}
-                            </h3>
-                            <p className="text-gray-600 mb-6">
-                                Chức năng đặt lịch đang được phát triển. Vui lòng liên hệ hotline để được hỗ trợ.
-                            </p>
-                            <div className="flex space-x-3">
-                                <button
-                                    onClick={() => setShowBooking(false)}
-                                    className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                                >
-                                    Đóng
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        window.open('tel:1900-1234', '_self');
-                                    }}
-                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                >
-                                    Gọi hotline
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <BookingModal
+                        consultant={selectedConsultant}
+                        onClose={() => setShowBooking(false)}
+                        onSuccess={() => {
+                            alert('Đặt lịch thành công! Vui lòng kiểm tra email để nhận thông báo.');
+                            window.location.href = '/my-consultations';
+                        }}
+                    />
                 )}
 
                 {/* Service Information */}

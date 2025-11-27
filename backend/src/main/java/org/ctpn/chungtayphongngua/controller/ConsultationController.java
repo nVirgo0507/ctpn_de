@@ -3,6 +3,7 @@ package org.ctpn.chungtayphongngua.controller;
 import org.ctpn.chungtayphongngua.dto.response.ConsultantDTO;
 import org.ctpn.chungtayphongngua.dto.response.UserProfileDTO;
 import org.ctpn.chungtayphongngua.entity.*;
+import org.ctpn.chungtayphongngua.repository.UserRepository;
 import org.ctpn.chungtayphongngua.service.ConsultationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,9 @@ public class ConsultationController {
 
     @Autowired
     private ConsultationService consultationService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping("/consultants")
     public ResponseEntity<List<ConsultantDTO>> getAllConsultants() {
@@ -58,15 +62,13 @@ public class ConsultationController {
                     userProfile.getSpecializations(),
                     null, // Qualifications removed from UserProfile
                     userProfile.getExperienceYears(),
-                    userProfile.getRating()
-            );
+                    userProfile.getRating());
         }
         return new ConsultantDTO(
                 user.getUserId(),
                 user.getFullName(),
                 user.getEmail(),
-                userProfileDTO
-        );
+                userProfileDTO);
     }
 
     // Other controller methods...
@@ -76,7 +78,8 @@ public class ConsultationController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-        List<ConsultantAvailability> availability = consultationService.getConsultantAvailability(consultantId, startDate, endDate);
+        List<ConsultantAvailability> availability = consultationService.getConsultantAvailability(consultantId,
+                startDate, endDate);
         return ResponseEntity.ok(availability);
     }
 
@@ -99,13 +102,12 @@ public class ConsultationController {
     }
 
     @PostMapping("/book")
-    @PreAuthorize("hasRole('MEMBER')")
+    @PreAuthorize("hasRole('MEMBER') or hasRole('ADMIN')")
     public ResponseEntity<?> bookConsultation(@RequestBody BookConsultationRequest request, Authentication auth) {
         try {
-            Long memberId = 1L; // This should be retrieved from the authenticated user
+            Long memberId = getUserIdFromAuth(auth);
             Consultation consultation = consultationService.bookConsultation(
-                    request.getConsultantId(), memberId, request.getScheduledAt(), request.getNotes()
-            );
+                    request.getConsultantId(), memberId, request.getScheduledAt(), request.getNotes());
             return ResponseEntity.ok(consultation);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("{\"error\": \"" + e.getMessage() + "\"}");
@@ -119,10 +121,9 @@ public class ConsultationController {
             @RequestBody CancelConsultationRequest request,
             Authentication auth) {
         try {
-            Long userId = 1L; // This should be retrieved from the authenticated user
+            Long userId = getUserIdFromAuth(auth);
             Consultation consultation = consultationService.cancelConsultation(
-                    consultationId, userId, request.getReason()
-            );
+                    consultationId, userId, request.getReason());
             return ResponseEntity.ok(consultation);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("{\"error\": \"" + e.getMessage() + "\"}");
@@ -136,8 +137,7 @@ public class ConsultationController {
             @RequestBody CompleteConsultationRequest request) {
         try {
             Consultation consultation = consultationService.completeConsultation(
-                    consultationId, request.getRating(), request.getFeedback()
-            );
+                    consultationId, request.getRating(), request.getFeedback());
             return ResponseEntity.ok(consultation);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("{\"error\": \"" + e.getMessage() + "\"}");
@@ -147,7 +147,7 @@ public class ConsultationController {
     @GetMapping("/my-consultations")
     @PreAuthorize("hasRole('MEMBER') or hasRole('CONSULTANT')")
     public ResponseEntity<List<Consultation>> getMyConsultations(Authentication auth) {
-        Long userId = 1L; // This should be retrieved from the authenticated user
+        Long userId = getUserIdFromAuth(auth);
         List<Consultation> consultations = consultationService.getUserConsultations(userId);
         return ResponseEntity.ok(consultations);
     }
@@ -155,7 +155,7 @@ public class ConsultationController {
     @GetMapping("/upcoming")
     @PreAuthorize("hasRole('MEMBER') or hasRole('CONSULTANT')")
     public ResponseEntity<List<Consultation>> getUpcomingConsultations(Authentication auth) {
-        Long userId = 1L; // This should be retrieved from the authenticated user
+        Long userId = getUserIdFromAuth(auth);
         List<Consultation> consultations = consultationService.getUpcomingConsultations(userId);
         return ResponseEntity.ok(consultations);
     }
@@ -163,9 +163,19 @@ public class ConsultationController {
     @GetMapping("/unrated")
     @PreAuthorize("hasRole('MEMBER')")
     public ResponseEntity<List<Consultation>> getUnratedConsultations(Authentication auth) {
-        Long memberId = 1L; // This should be retrieved from the authenticated user
+        Long memberId = getUserIdFromAuth(auth);
         List<Consultation> consultations = consultationService.getUnratedConsultations(memberId);
         return ResponseEntity.ok(consultations);
+    }
+
+    private Long getUserIdFromAuth(Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+        String email = auth.getName();
+        return userRepository.findByEmail(email)
+                .map(User::getUserId)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
 
     @GetMapping("/consultants/{consultantId}/stats")
@@ -192,29 +202,74 @@ public class ConsultationController {
         return ResponseEntity.ok(stats);
     }
 
+    @PostMapping("/admin/seed-availability")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> seedAvailability() {
+        consultationService.seedAvailabilityForConsultants();
+        return ResponseEntity.ok("Availability seeded successfully");
+    }
+
     // DTOs
     public static class BookConsultationRequest {
         private Long consultantId;
         private LocalDateTime scheduledAt;
         private String notes;
-        public Long getConsultantId() { return consultantId; }
-        public void setConsultantId(Long id) { this.consultantId = id; }
-        public LocalDateTime getScheduledAt() { return scheduledAt; }
-        public void setScheduledAt(LocalDateTime dt) { this.scheduledAt = dt; }
-        public String getNotes() { return notes; }
-        public void setNotes(String n) { this.notes = n; }
+
+        public Long getConsultantId() {
+            return consultantId;
+        }
+
+        public void setConsultantId(Long id) {
+            this.consultantId = id;
+        }
+
+        public LocalDateTime getScheduledAt() {
+            return scheduledAt;
+        }
+
+        public void setScheduledAt(LocalDateTime dt) {
+            this.scheduledAt = dt;
+        }
+
+        public String getNotes() {
+            return notes;
+        }
+
+        public void setNotes(String n) {
+            this.notes = n;
+        }
     }
+
     public static class CancelConsultationRequest {
         private String reason;
-        public String getReason() { return reason; }
-        public void setReason(String r) { this.reason = r; }
+
+        public String getReason() {
+            return reason;
+        }
+
+        public void setReason(String r) {
+            this.reason = r;
+        }
     }
+
     public static class CompleteConsultationRequest {
         private Integer rating;
         private String feedback;
-        public Integer getRating() { return rating; }
-        public void setRating(Integer r) { this.rating = r; }
-        public String getFeedback() { return feedback; }
-        public void setFeedback(String f) { this.feedback = f; }
+
+        public Integer getRating() {
+            return rating;
+        }
+
+        public void setRating(Integer r) {
+            this.rating = r;
+        }
+
+        public String getFeedback() {
+            return feedback;
+        }
+
+        public void setFeedback(String f) {
+            this.feedback = f;
+        }
     }
 }
