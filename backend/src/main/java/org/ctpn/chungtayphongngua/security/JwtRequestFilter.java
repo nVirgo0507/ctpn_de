@@ -23,10 +23,10 @@ import java.util.Collections;
  */
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
-    
+
     @Autowired
     private JwtUtil jwtUtil;
-    
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestPath = request.getRequestURI();
@@ -39,16 +39,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, 
-                                   HttpServletResponse response, 
-                                   FilterChain chain) throws ServletException, IOException {
-        
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain) throws ServletException, IOException {
+
         final String requestTokenHeader = request.getHeader("Authorization");
-        
+
         String username = null;
         String jwtToken = null;
         String role = null;
-        
+
         // JWT Token is in the form "Bearer token"
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring(7);
@@ -59,69 +59,71 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 logger.warn("JWT Token extraction failed: " + e.getMessage());
             }
         }
-        
+
         // Validate token and set authentication context
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            
+
             // Create UserDetails from JWT token
             UserDetails userDetails = User.builder()
                     .username(username)
                     .password("") // Password not needed for JWT authentication
                     .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())))
                     .build();
-                
+
             System.out.println("DEBUG: Creating authority: ROLE_" + role.toUpperCase() + " for user: " + username);
-            
+
             // Validate token
             if (jwtUtil.validateToken(jwtToken, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = 
-                    new UsernamePasswordAuthenticationToken(
-                        userDetails, 
-                        null, 
-                        userDetails.getAuthorities()
-                    );
-                
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities());
+
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
-        
+
         chain.doFilter(request, response);
     }
 
     /**
-     * Check if the request path is a public endpoint that should skip JWT authentication
+     * Check if the request path is a public endpoint that should skip JWT
+     * authentication
      * Supporting FR-002 Public Content Access requirements
      */
     private boolean isPublicEndpoint(String requestPath) {
         // Public endpoints that don't require authentication per SecurityConfig
         String[] publicPaths = {
-            "/api/auth/",
-            "/api/actuator/",
-            "/api/surveys/public/",
-            "/api/surveys/submit/",
-            "/api/surveys/health",
-            "/api/blog/public/",
-            "/api/blog/latest",
-            "/api/blog/categories",
-            "/api/homepage/",
-            "/api/public/",
-            "/api/courses/health",
-            "/api/courses",
-            "/api/dashboard/health",
-            "/api/test/"
+                "/api/auth/",
+                "/api/actuator/",
+                "/api/surveys/public/",
+                "/api/surveys/submit/",
+                "/api/surveys/health",
+                "/api/blog/public/",
+                "/api/blog/latest",
+                "/api/blog/categories",
+                "/api/homepage/",
+                "/api/public/",
+                "/api/courses/health",
+                "/api/courses",
+                "/api/dashboard/health",
+                "/api/test/",
+                "/api/posts/",
+                "/api/categories/"
         };
-        
+
         System.out.println("DEBUG: Checking public endpoint for path: " + requestPath);
-        
+
         for (String publicPath : publicPaths) {
-            if (requestPath.startsWith(publicPath) || requestPath.equals(publicPath.substring(0, publicPath.length() - 1))) {
+            if (requestPath.startsWith(publicPath)
+                    || requestPath.equals(publicPath.substring(0, publicPath.length() - 1))) {
                 System.out.println("DEBUG: Path " + requestPath + " matches public path: " + publicPath);
                 return true;
             }
         }
-        
+
         System.out.println("DEBUG: Path " + requestPath + " is NOT public");
         return false;
     }
-} 
+}

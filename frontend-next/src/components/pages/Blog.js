@@ -27,10 +27,11 @@ const Blog = () => {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/posts');
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/api/blog/public');
       if (response.ok) {
         const data = await response.json();
-        setPosts(data);
+        setPosts(data.data.content); // Backend returns { success: true, data: Page<...> }
       } else {
         setError('Không thể tải danh sách bài viết');
       }
@@ -44,10 +45,10 @@ const Blog = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/categories');
+      const response = await fetch('http://localhost:8080/api/blog/categories');
       if (response.ok) {
         const data = await response.json();
-        setCategories(data);
+        setCategories(data.data); // Backend returns { success: true, data: List<...> }
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -61,7 +62,7 @@ const Blog = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/posts/${postId}/like`, {
+      const response = await fetch(`http://localhost:8080/api/blog/${postId}/like`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user.token}`,
@@ -135,8 +136,8 @@ const Blog = () => {
               <button
                 onClick={() => setSelectedCategory('all')}
                 className={`px-4 py-2 rounded-xl whitespace-nowrap transition-colors ${selectedCategory === 'all'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-purple-50'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-600 hover:bg-purple-50'
                   }`}
               >
                 Tất cả
@@ -146,8 +147,8 @@ const Blog = () => {
                   key={category.id}
                   onClick={() => setSelectedCategory(category.slug)}
                   className={`px-4 py-2 rounded-xl whitespace-nowrap transition-colors ${selectedCategory === category.slug
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white text-gray-600 hover:bg-purple-50'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-purple-50'
                     }`}
                 >
                   {category.name}
