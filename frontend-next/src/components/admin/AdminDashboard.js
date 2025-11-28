@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { authFetch } from '../../utils/authFetch';
+import DashboardCharts from './DashboardCharts';
+import UserDetailModal from './UserDetailModal';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -8,6 +10,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' or 'users'
+  const [selectedUser, setSelectedUser] = useState(null);
   const { user } = useAuthContext();
 
   useEffect(() => {
@@ -19,10 +22,19 @@ const AdminDashboard = () => {
     setError(null);
     try {
       if (activeTab === 'dashboard') {
-        const response = await authFetch('http://localhost:8080/api/admin/stats');
-        if (!response.ok) throw new Error('Failed to fetch admin statistics');
-        const data = await response.json();
-        setStats(data);
+        const [statsRes, usersRes] = await Promise.all([
+          authFetch('http://localhost:8080/api/admin/stats'),
+          authFetch('http://localhost:8080/api/admin/users')
+        ]);
+
+        if (!statsRes.ok) throw new Error('Failed to fetch admin statistics');
+        if (!usersRes.ok) throw new Error('Failed to fetch users for charts');
+
+        const statsData = await statsRes.json();
+        const usersData = await usersRes.json();
+
+        setStats(statsData);
+        setUsers(usersData);
       } else if (activeTab === 'users') {
         const response = await authFetch('http://localhost:8080/api/admin/users');
         if (!response.ok) throw new Error('Failed to fetch users');
@@ -89,24 +101,28 @@ const AdminDashboard = () => {
       {error && <div className="text-red-500 mb-4">Error: {error}</div>}
 
       {activeTab === 'dashboard' && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700">Total Users</h2>
-            <p className="text-4xl font-bold text-blue-600">{stats.totalUsers}</p>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-gray-700">Total Users</h2>
+              <p className="text-4xl font-bold text-blue-600">{stats.totalUsers}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-gray-700">Total Courses</h2>
+              <p className="text-4xl font-bold text-green-600">{stats.totalCourses}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-gray-700">Total Consultations</h2>
+              <p className="text-4xl font-bold text-purple-600">{stats.totalConsultations}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-gray-700">Total Blog Posts</h2>
+              <p className="text-4xl font-bold text-yellow-600">{stats.totalBlogPosts}</p>
+            </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700">Total Courses</h2>
-            <p className="text-4xl font-bold text-green-600">{stats.totalCourses}</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700">Total Consultations</h2>
-            <p className="text-4xl font-bold text-purple-600">{stats.totalConsultations}</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700">Total Blog Posts</h2>
-            <p className="text-4xl font-bold text-yellow-600">{stats.totalBlogPosts}</p>
-          </div>
-        </div>
+
+          <DashboardCharts stats={stats} users={users} />
+        </>
       )}
 
       {activeTab === 'users' && (
@@ -151,7 +167,13 @@ const AdminDashboard = () => {
                       {u.isDeleted ? 'Deleted' : 'Active'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <button
+                      onClick={() => setSelectedUser(u)}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      Detail
+                    </button>
                     {!u.isDeleted && (
                       <button
                         onClick={() => handleDeleteUser(u.userId)}
@@ -166,6 +188,13 @@ const AdminDashboard = () => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {selectedUser && (
+        <UserDetailModal
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+        />
       )}
     </div>
   );
