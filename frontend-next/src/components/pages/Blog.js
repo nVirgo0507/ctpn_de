@@ -151,7 +151,7 @@ const Blog = () => {
           </button>
           {categories.map(category => (
             <button
-              key={category.id}
+              key={category.categoryId}
               onClick={() => setSelectedCategory(category.slug)}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${selectedCategory === category.slug
                 ? 'bg-purple-600 text-white shadow-md transform scale-105'
