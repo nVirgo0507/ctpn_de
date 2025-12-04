@@ -66,7 +66,11 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/homepage/**").permitAll()
+                        .requestMatchers("/blog/**").permitAll()
+                        .requestMatchers("/api/blog/**").permitAll()
                         .requestMatchers("/blog/public/**").permitAll()
+                        .requestMatchers("/blog/categories").permitAll()
+                        .requestMatchers("/blog/latest").permitAll()
                         .requestMatchers("/courses").permitAll() // Public course list
                         .requestMatchers("/courses/{id}").permitAll() // Public course detail
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
@@ -96,5 +100,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers("/blog/**", "/api/blog/**");
     }
 }

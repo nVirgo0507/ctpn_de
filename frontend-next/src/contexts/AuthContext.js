@@ -22,7 +22,9 @@ export const AuthProvider = ({ children }) => {
 
     if (token && userData) {
       try {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        // Ensure token is included in user object
+        setUser({ ...parsedUser, token });
       } catch (error) {
         console.error('Error parsing user data:', error);
         sessionStorage.removeItem('jwt_token');
@@ -34,7 +36,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData, token) => {
-    setUser(userData);
+    // Include token in user state
+    setUser({ ...userData, token });
     sessionStorage.setItem('jwt_token', token);
     sessionStorage.setItem('user_data', JSON.stringify(userData));
   };
