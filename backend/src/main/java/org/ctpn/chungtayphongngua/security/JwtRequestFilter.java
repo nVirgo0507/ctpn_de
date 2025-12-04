@@ -93,6 +93,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      * Supporting FR-002 Public Content Access requirements
      */
     private boolean isPublicEndpoint(String requestPath) {
+        // Explicitly require authentication for enrollment
+        if (requestPath.endsWith("/enroll") || requestPath.contains("/my-enrollments")
+                || requestPath.contains("/my-stats") || requestPath.endsWith("/progress")) {
+            System.out.println("DEBUG: Path " + requestPath + " is an enrollment endpoint, requiring authentication");
+            return false;
+        }
         // Public endpoints that don't require authentication per SecurityConfig
         String[] publicPaths = {
                 "/api/auth/",

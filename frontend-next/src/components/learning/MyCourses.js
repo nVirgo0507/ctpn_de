@@ -42,8 +42,8 @@ const MyCourses = () => {
                 }
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            if (true) {
+                const data = response.data;
                 setEnrollments(data);
             } else {
                 setError('Không thể tải danh sách khóa học của bạn');
@@ -65,8 +65,8 @@ const MyCourses = () => {
                 }
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            if (true) {
+                const data = response.data;
                 setStats({
                     totalCourses: data[0] || 0,
                     averageProgress: data[1] || 0,
@@ -87,7 +87,7 @@ const MyCourses = () => {
                 }
             });
 
-            if (response.ok) {
+            if (true) {
                 fetchEnrollments(); // Refresh the list
                 fetchStats(); // Refresh stats
             } else {
@@ -214,8 +214,8 @@ const MyCourses = () => {
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
                                 className={`flex items-center px-6 py-3 rounded-xl font-medium transition-colors ${activeTab === tab.key
-                                        ? 'bg-blue-600 text-white shadow-lg'
-                                        : 'text-gray-600 hover:bg-white/50'
+                                    ? 'bg-blue-600 text-white shadow-lg'
+                                    : 'text-gray-600 hover:bg-white/50'
                                     }`}
                             >
                                 <span className="mr-2">{tab.icon}</span>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { FiHome, FiBookOpen, FiMessageCircle, FiEdit3, FiMenu, FiX, FiLogOut, FiUser, FiGrid } from 'react-icons/fi';
+import { FiHome, FiBookOpen, FiMessageCircle, FiEdit3, FiMenu, FiX, FiLogOut, FiUser, FiGrid, FiCalendar, FiLayers } from 'react-icons/fi';
 import { useAuthContext } from '../../contexts/AuthContext';
 
 const Header = () => {
@@ -33,6 +33,8 @@ const Header = () => {
     { path: '/assessment', label: 'Đánh giá rủi ro', icon: FiEdit3, protected: true },
     { path: '/courses', label: 'Khóa học', icon: FiBookOpen, protected: true },
     { path: '/consultation', label: 'Tư vấn', icon: FiMessageCircle, protected: true },
+    { path: '/my-consultations', label: 'Lịch tư vấn', icon: FiCalendar, protected: true },
+    { path: '/my-courses', label: 'Khóa học của tôi', icon: FiLayers, protected: true },
     { path: '/blog', label: 'Blog', icon: FiEdit3, public: true },
     { path: '/surveys', label: 'Khảo sát', icon: FiEdit3, public: true },
     { path: '/admin', label: 'Admin Dashboard', icon: FiGrid, adminOnly: true }
@@ -67,8 +69,8 @@ const Header = () => {
                   key={item.path}
                   href={item.path}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${isActive
-                      ? 'bg-blue-500 text-white shadow-md'
-                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                     } vietnamese-text whitespace-nowrap`}
                 >
                   {item.label}
@@ -138,8 +140,8 @@ const Header = () => {
                     href={item.path}
                     onClick={() => setIsMenuOpen(false)}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                        ? 'bg-blue-50 text-blue-600 font-semibold'
-                        : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-blue-50 text-blue-600 font-semibold'
+                      : 'text-gray-600 hover:bg-gray-50'
                       }`}
                   >
                     <Icon className="w-5 h-5" />
